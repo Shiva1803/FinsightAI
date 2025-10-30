@@ -192,3 +192,70 @@ async def extract_shivaay(file: UploadFile = File(None), ocr_text: str = Form(No
     record_id = db.save_record(mapped, source_file="shivaay:live")
     mapped["record_id"] = record_id
     return mapped
+
+@app.post("/extract/ai/")
+async def extract_with_ai_endpoint(
+    file: UploadFile = File(None),
+    ocr_text: str = Form(None),
+    provider: str = Form(None)
+):
+    """
+    AI-powered extraction with automatic fallback
+    
+    Accepts:
+      - file: PDF or image file
+      - ocr_text: Pre-extracted OCR text
+      - provider: Specific AI provider (openai, shivaay, local)
+    
+    Returns:
+      Extracted structured data with provider info
+    """
+    from .ai_extractor import extract_with_ai
+    
+    # Get OCR text
+    if file is not None:
+        content = await file.read()
+        text = ocr.run_ocr_bytes(content, file.filename)
+        filename = file.filename
+    elif ocr_text:
+        text = ocr_text
+        filename = "text_input"
+    else:
+        raise HTTPException(status_code=400, detail="Provide either file or ocr_text")
+    
+    # Check for OCR errors
+    if text.startswith("ERROR:"):
+        raise HTTPException(status_code=500, detail=f"OCR failed: {text}")
+    
+    # Extract with AI
+    try:
+        result = await extract_with_ai(text, provider=provider)
+        
+        if not result["success"]:
+            raise HTTPException(
+                status_code=500,
+                detail=f"AI extraction failed: {result.get('error')}"
+            )
+        
+        # Save to database
+        extracted_data = result["data"]
+        record_id = db.save_record(extracted_data, source_file=f"ai:{result['provider']}:{filename}")
+        
+        return {
+            "success": True,
+            "provider": result["provider"],
+            "record_id": record_id,
+            "data": extracted_data
+        }
+        
+    except Exception as e:
+        print(f"ERROR in AI extraction: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Extraction failed: {str(e)}")
+
+@app.get("/ai/status/")
+def get_ai_status():
+    """Get status of AI providers"""
+    from .ai_extractor import get_provider_status
+    return get_provider_status()

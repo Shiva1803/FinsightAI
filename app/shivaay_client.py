@@ -2,10 +2,48 @@ import os
 import httpx
 from typing import Any, Dict, Optional
 
-SHIVAAY_API_KEY = os.getenv("SHIVAAY_API_KEY", "")
-SHIVAAY_API_URL = os.getenv("SHIVAAY_API_URL", "https://shivaay.futurixai.com/api/v1/extract")
+SHIVAAY_API_KEY = os.getenv("SHIVAAY_API_KEY", "6903c3fe3bb9326d4656659b")
+# Note: Update this URL with the correct Shivaay API endpoint when available
+SHIVAAY_API_URL = os.getenv("SHIVAAY_API_URL", "https://api.shivaay.futurixai.com/v1/extract")
 
-DEFAULT_PROMPT = """<PASTE_YOUR_FULL_PROMPT_HERE>"""
+DEFAULT_PROMPT = """You are an expert AI system specialized in extracting structured data from invoice and purchase order documents.
+
+Extract the following information from the provided OCR text and return it as a JSON object:
+
+{
+  "document_type": "invoice" or "purchase_order",
+  "vendor_name": "Company name of the seller/supplier",
+  "vendor_tax_id": "GST/VAT/Tax ID of vendor",
+  "buyer_name": "Company name of the buyer",
+  "buyer_tax_id": "GST/VAT/Tax ID of buyer",
+  "document_number": "Invoice number or PO number",
+  "po_number": "Referenced PO number (if this is an invoice)",
+  "invoice_date": "Date in YYYY-MM-DD format",
+  "due_date": "Payment due date in YYYY-MM-DD format",
+  "currency": "Currency code (INR, USD, EUR, etc.)",
+  "total_amount": numeric value without currency symbols,
+  "subtotal_amount": numeric value before tax,
+  "tax_amount": numeric tax amount,
+  "line_items": [
+    {
+      "description": "Item description",
+      "sku": "Item code/SKU if available",
+      "quantity": numeric quantity,
+      "unit_price": numeric price per unit,
+      "line_total": numeric total for this line
+    }
+  ]
+}
+
+Instructions:
+1. Extract all available fields from the OCR text
+2. Use null for missing fields
+3. Convert all amounts to numeric values (remove currency symbols and commas)
+4. Format dates as YYYY-MM-DD
+5. Be precise and accurate
+6. If uncertain about a field, set it to null rather than guessing
+
+Return ONLY the JSON object, no additional text."""
 
 HEADERS = {
     "Authorization": f"Bearer {SHIVAAY_API_KEY}" if SHIVAAY_API_KEY else "",

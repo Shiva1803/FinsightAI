@@ -12,3 +12,6 @@ imapclient
 httpx
 PyPDF2
 pdf2image
+python-dotenv
+google-generativeai
+tenacity
