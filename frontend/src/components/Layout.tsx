@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Upload, CheckCircle, Database, Activity, Home } from 'lucide-react'
+import { Upload, CheckCircle, Database, Activity, Home, Mail } from 'lucide-react'
 import { ReactNode, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ThemeToggle from './ThemeToggle'
@@ -18,6 +18,7 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/verify', label: 'Verify Documents', icon: CheckCircle },
     { path: '/upload', label: 'Upload Document', icon: Upload },
     { path: '/records', label: 'Records', icon: Database },
+    { path: '/email-watcher', label: 'Email Watcher', icon: Mail },
   ]
   
   return (

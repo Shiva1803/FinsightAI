@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import VerifyDocuments from './pages/VerifyDocuments.tsx'
 import UploadDocument from './pages/UploadDocument.tsx'
 import Records from './pages/Records.tsx'
+import EmailWatcher from './pages/EmailWatcher.tsx'
 
 function App() {
   const [showSplash, setShowSplash] = useState(true)
@@ -37,6 +38,7 @@ function App() {
               <Route path="/verify" element={<Layout><VerifyDocuments /></Layout>} />
               <Route path="/upload" element={<Layout><UploadDocument /></Layout>} />
               <Route path="/records" element={<Layout><Records /></Layout>} />
+              <Route path="/email-watcher" element={<Layout><EmailWatcher /></Layout>} />
             </Routes>
           </Router>
         </div>

@@ -56,10 +56,30 @@ def export_csv():
     return FileResponse(path, filename="futurix_export.csv")
 
 @app.post("/email/watch/start/")
-def start_email_watch(background_tasks: BackgroundTasks, imap_host: str = Form(...), imap_user: str = Form(...), imap_pass: str = Form(...)):
-    # WARNING: this is MVP-level, credentials stored in memory. Do NOT use in production.
-    background_tasks.add_task(email_watcher.watch_mailbox, imap_host, imap_user, imap_pass)
-    return {"status":"watch_started"}
+def start_email_watch(
+    imap_host: str = Form(...),
+    imap_user: str = Form(...),
+    imap_pass: str = Form(...),
+    check_interval: int = Form(60)
+):
+    """Start email watcher to monitor mailbox for new documents"""
+    result = email_watcher.start_watcher(imap_host, imap_user, imap_pass, check_interval)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+@app.post("/email/watch/stop/")
+def stop_email_watch():
+    """Stop the email watcher"""
+    result = email_watcher.stop_watcher()
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+@app.get("/email/watch/status/")
+def get_email_watch_status():
+    """Get email watcher status and statistics"""
+    return email_watcher.get_watcher_status()
 
 @app.get("/health/")
 def health():

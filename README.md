@@ -64,7 +64,14 @@
 - **Discrepancy Detection**: Identify mismatches with severity levels (Low, Medium, High)
 - **Risk Scoring**: Calculate risk scores (0-10) based on anomaly patterns
 
-#### 🤖 AI-Powered Anomaly Detection
+#### 🤖 AI-Powered Data Extraction
+- **Google Gemini AI**: Advanced AI-powered document data extraction
+- **Automatic Fallback**: Falls back to local extraction if AI fails
+- **Structured Output**: Extracts vendor, amounts, dates, line items, tax details
+- **Multi-Provider Support**: Gemini, Shivaay, OpenAI, and local extraction
+- **Real-time Status**: Monitor AI provider status and configuration
+
+#### 🛡️ Anomaly Detection
 - **Overbilling Detection**: Identify when invoice amounts exceed PO amounts
 - **Price Manipulation**: Detect altered unit prices
 - **Vendor Fraud**: Flag vendor name mismatches
@@ -77,6 +84,13 @@
 - **Tesseract OCR**: Extract text from scanned documents
 - **Smart Parsing**: Automatically extract vendor, amounts, dates, line items
 - **Confidence Scoring**: Assess extraction quality
+
+#### 📧 Email Watcher
+- **Automatic Monitoring**: Monitor email inbox for new invoices and POs
+- **IMAP Support**: Connect to Gmail, Outlook, and other IMAP servers
+- **Real-time Processing**: Automatically extract and save document data
+- **Live Statistics**: Track emails processed, last check time, and errors
+- **Easy Configuration**: Simple web interface for setup
 
 #### 📊 Visual Analytics
 - **Bar Charts**: Compare PO vs Invoice totals
@@ -94,10 +108,11 @@
 ### User Interface
 
 - **🎨 Modern Design**: Clean, professional interface with Tailwind CSS
-- **🌓 Dark Mode**: Full dark mode support
+- **🌓 Dark Mode**: Full dark mode support with theme toggle
 - **📱 Responsive**: Works on desktop, tablet, and mobile
 - **🎭 Animations**: Smooth transitions with Framer Motion
 - **🎯 Intuitive Navigation**: Easy-to-use multi-page layout
+- **🎨 Consistent Theme**: Amber/yellow accent colors throughout
 
 ---
 
@@ -107,7 +122,10 @@
 View key metrics, recent verifications, and system health at a glance.
 
 ### Document Upload
-Drag-and-drop interface for uploading PO and Invoice documents.
+- Drag-and-drop interface for uploading documents
+- AI-powered extraction with Google Gemini
+- Automatic fallback to local extraction
+- Real-time processing status
 
 ### Verification Results
 Comprehensive verification report with:
@@ -116,6 +134,12 @@ Comprehensive verification report with:
 - Anomaly insights and fraud indicators
 - Interactive charts and visualizations
 - Detailed line item comparison
+
+### Email Watcher
+- Configure IMAP email monitoring
+- Automatic document processing from email attachments
+- Live status dashboard with statistics
+- Start/stop controls with one click
 
 ### Records Management
 Browse all verification records, view details, and export to CSV.
@@ -177,9 +201,11 @@ Browse all verification records, view details, and export to CSV.
 ### Backend
 - **FastAPI** - Modern Python web framework
 - **Python 3.11+** - Programming language
+- **Google Gemini AI** - Advanced AI for document extraction
 - **Tesseract OCR** - Text extraction engine
 - **SQLModel** - SQL database ORM
 - **SQLite** - Embedded database
+- **IMAPClient** - Email monitoring
 - **Pillow** - Image processing
 - **PyPDF2** - PDF manipulation
 - **Pandas** - Data analysis
@@ -202,23 +228,39 @@ Before you begin, ensure you have the following installed:
 - **Node.js** (v18 or higher) - [Download](https://nodejs.org/)
 - **Python** (v3.11 or higher) - [Download](https://www.python.org/)
 - **Tesseract OCR** - [Installation Guide](https://github.com/tesseract-ocr/tesseract)
+- **Poppler** (for PDF support) - [Installation Guide](#install-system-dependencies)
 - **Git** - [Download](https://git-scm.com/)
 
-#### Install Tesseract OCR
+### Install System Dependencies
 
 **macOS:**
 ```bash
-brew install tesseract
+brew install poppler tesseract
 ```
 
-**Ubuntu/Debian:**
+**Ubuntu/Linux:**
 ```bash
 sudo apt-get update
-sudo apt-get install tesseract-ocr
+sudo apt-get install poppler-utils tesseract-ocr
 ```
 
 **Windows:**
-Download installer from [GitHub](https://github.com/UB-Mannheim/tesseract/wiki)
+- Install poppler from: https://github.com/oschwartz10612/poppler-windows/releases
+- Install Tesseract from: https://github.com/UB-Mannheim/tesseract/wiki
+
+### Configure AI Provider (Optional)
+
+Create a `.env` file in the root directory:
+
+```bash
+# Google Gemini AI (Recommended)
+GEMINI_API_KEY=your_gemini_api_key_here
+AI_PROVIDER=gemini
+
+# Get your free API key from: https://aistudio.google.com/app/apikey
+```
+
+The system will automatically fall back to local extraction if no API key is provided.
 
 ### Clone Repository
 
@@ -310,6 +352,7 @@ npm run dev
 - **Backend API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
 - **Health Check**: http://localhost:8000/health/
+- **Email Watcher**: http://localhost:5173/email-watcher
 
 ---
 
@@ -420,7 +463,106 @@ Export all records to CSV file.
 
 **Response:** CSV file download
 
-#### 6. Health Check
+#### 6. AI Extraction
+```http
+POST /extract/ai/
+```
+Extract data using Google Gemini AI with automatic fallback.
+
+**Request:**
+- Content-Type: `multipart/form-data`
+- Body: `file` (PDF/Image) or `ocr_text` (string)
+
+**Response:**
+```json
+{
+  "success": true,
+  "provider": "gemini",
+  "record_id": 1,
+  "data": {
+    "vendor_name": "AlphaTech",
+    "document_number": "INV-4719",
+    "total_amount": 613010,
+    ...
+  }
+}
+```
+
+#### 7. AI Provider Status
+```http
+GET /ai/status/
+```
+Get current AI provider configuration and status.
+
+**Response:**
+```json
+{
+  "current_provider": "gemini",
+  "available_providers": ["gemini", "local"],
+  "gemini_configured": true,
+  "model": "gemini-2.5-flash"
+}
+```
+
+#### 8. Email Watcher - Start
+```http
+POST /email/watch/start/
+```
+Start monitoring email inbox for documents.
+
+**Request:**
+- Content-Type: `application/x-www-form-urlencoded`
+- Body:
+  - `imap_host`: IMAP server (e.g., imap.gmail.com)
+  - `imap_user`: Email address
+  - `imap_pass`: App password
+  - `check_interval`: Check interval in seconds (default: 60)
+
+**Response:**
+```json
+{
+  "status": "started"
+}
+```
+
+#### 9. Email Watcher - Status
+```http
+GET /email/watch/status/
+```
+Get email watcher status and statistics.
+
+**Response:**
+```json
+{
+  "running": true,
+  "config": {
+    "imap_host": "imap.gmail.com",
+    "imap_user": "user@gmail.com",
+    "check_interval": 60
+  },
+  "stats": {
+    "status": "running",
+    "emails_processed": 5,
+    "last_check": "2025-10-31 14:30:00",
+    "last_error": null
+  }
+}
+```
+
+#### 10. Email Watcher - Stop
+```http
+POST /email/watch/stop/
+```
+Stop the email watcher.
+
+**Response:**
+```json
+{
+  "status": "stopped"
+}
+```
+
+#### 11. Health Check
 ```http
 GET /health/
 ```
@@ -455,6 +597,8 @@ FinsightAI/
 │   ├── db.py                     # Database operations
 │   ├── utils.py                  # Utility functions
 │   ├── email_watcher.py          # Email monitoring
+│   ├── gemini_client.py          # Google Gemini AI client
+│   ├── ai_extractor.py           # AI extraction orchestrator
 │   └── shivaay_client.py         # External API client
 │
 ├── frontend/                     # Frontend application
@@ -473,7 +617,8 @@ FinsightAI/
 │   │   │   ├── Home.tsx
 │   │   │   ├── Records.tsx
 │   │   │   ├── UploadDocument.tsx
-│   │   │   └── VerifyDocuments.tsx
+│   │   │   ├── VerifyDocuments.tsx
+│   │   │   └── EmailWatcher.tsx
 │   │   ├── services/             # API services
 │   │   │   └── api.ts
 │   │   ├── types/                # TypeScript types
@@ -511,15 +656,50 @@ FinsightAI/
 Create a `.env` file in the root directory:
 
 ```bash
+# ============================================
+# AI Provider Configuration
+# ============================================
+
+# Google Gemini AI (Recommended)
+GEMINI_API_KEY=your_gemini_api_key_here
+AI_PROVIDER=gemini
+
+# Get your free API key from: https://aistudio.google.com/app/apikey
+
+# ============================================
 # Optional: External API Configuration
+# ============================================
 SHIVAAY_API_KEY=your-api-key-here
 SHIVAAY_API_URL=https://api.shivaay.com/extract
 
-# Optional: Database Configuration
+OPENAI_API_KEY=your-openai-key-here
+OPENAI_MODEL=gpt-4
+
+# ============================================
+# Email Watcher (Optional)
+# ============================================
+# Configure via web interface at /email-watcher
+# Or set these for automatic startup:
+# EMAIL_WATCHER_HOST=imap.gmail.com
+# EMAIL_WATCHER_USER=your-email@gmail.com
+# EMAIL_WATCHER_PASS=your-app-password
+# EMAIL_WATCHER_INTERVAL=60
+
+# ============================================
+# Database Configuration
+# ============================================
 DATABASE_URL=sqlite:///./futurix.db
 
-# Optional: CORS Origins
+# ============================================
+# CORS Origins
+# ============================================
 CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+
+# ============================================
+# Application Settings
+# ============================================
+DEBUG=True
+LOG_LEVEL=INFO
 ```
 
 ### Frontend Configuration
@@ -591,8 +771,10 @@ python test_verification_agent.py
 The project includes comprehensive tests for:
 - ✅ OCR text extraction
 - ✅ Document parsing
+- ✅ AI extraction (Gemini)
 - ✅ Verification logic
 - ✅ Anomaly detection
+- ✅ Email watcher
 - ✅ Database operations
 - ✅ API endpoints
 
@@ -783,11 +965,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
+- [Google Gemini AI](https://ai.google.dev/) - Advanced AI for document extraction
 - [FastAPI](https://fastapi.tiangolo.com/) - Modern Python web framework
 - [React](https://reactjs.org/) - UI library
 - [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) - OCR engine
 - [Tailwind CSS](https://tailwindcss.com/) - CSS framework
 - [Recharts](https://recharts.org/) - Chart library
+- [Framer Motion](https://www.framer.com/motion/) - Animation library
 
 ---
 
