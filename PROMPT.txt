@@ -1,0 +1,5 @@
+FUTURIX-AI: SUPER DETAILED PROMPT FOR LLM OR LIGHTWEIGHT MODEL
+=============================================================
+
+(Include the same detailed prompt you provided originally. This file is a short
+placeholder to remind you; the full prompt is in PROMPT_FULL.txt)

@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlmodel
+python-multipart
+pytesseract
+Pillow
+aiofiles
+pandas
+python-dateutil
+mailbox
+imapclient
+httpx
+PyPDF2
+pdf2image
